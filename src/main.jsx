@@ -8,3 +8,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>,
 );
+
+
+// this is creating a APP component which is a temple component
+// this is the first file that runs in app
