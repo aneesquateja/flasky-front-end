@@ -116,8 +116,8 @@ function App() {
 
   const totalPets = calculateTotalPetCount(catData);
 
-  const handleSubmit = (data) => {
-    axios.post(`${kbaseURL}/cats`, data)
+  const handleSubmit = (catData) => {
+    axios.post(`${kbaseURL}/cats`, catData)
       .then((result) => {
         setCatData((prevCats) => [convertFromApi(result.data), ...prevCats]);
       })
