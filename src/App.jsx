@@ -1,78 +1,116 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import CatList from './components/CatList';   // it is local import so ./components
+import NewCatForm from './components/NewCatForm';
+import axios from 'axios';
+
+const kbaseURL = 'http://127.0.0.1:5000';
 
 
-const DATA = [
-  {
-    id: 1,
-    name: 'Ubik',
-    caretaker: 'Maria',
-    color: 'grey',
-    personality: 'wild child',
-    petCount: 1
-  },
-  {
-    id: 2,
-    name: 'Pepper',
-    caretaker: 'Mark',
-    color: 'black',
-    personality: 'spicy',
-    petCount: 0
-  },
-  {
-    id: 3,
-    name: 'Binx',
-    caretaker: 'Susan',
-    color: 'tuxedo',
-    personality: 'feral',
-    petCount: 0
-  },
-  {
-    id: 4,
-    name: 'pisspiss',
-    caretaker: 'buusan',
-    color: 'hazel',
-    personality: 'fluffy',
-    petCount: 0
-  }
-];
+const convertFromApi = (apiCat) => {
+  const newCat = {
+    ...apiCat,
+    caretaker: apiCat.caretaker? apiCat.caretaker : 'Unknown',
+    petCount: apiCat.petCount
+  };
+
+  delete newCat.petCount;
+  return newCat;
+};
+
+const getAllCatsApi = () => {
+  return axios.get(`${kbaseURL}/cats`)
+    .then((response) => {
+      const apiCats = response.data;
+      const newCats = apiCats.map(convertFromApi);
+      return newCats;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const petCatApi = (id) => {
+  return axios.patch(`${kbaseURL}/cats/${id}/pet`)
+    .then( response => {
+      const newCat = convertFromApi(response.data);
+      return newCat;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const unregisterCatApi = (id) => {
+  return axios.delete(`${kbaseURL}/cats/${id}`)
+    .catch(error => {
+      console.log(error);
+    });
+};
 
 function App() {
-  // State to manage the current list of cats
-  const [catData, setCatData] = useState(DATA);
+  const [catData, setCatData] = useState([]);
 
-  // Function to handle "petting" a cat
+  const getAllCats = () => {
+    getAllCatsApi()
+      .then(cats => {
+        setCatData(cats);
+      });
+  };
+  useEffect(() => {
+    getAllCats();
+  }, []);
+
+
   const handlePetCat = (id) => {
-    setCatData((catData) =>
-      catData.map((cat) => {
-        if (cat.id === id) {
-          // Increment pet count for the matching cat
-          return { ...cat, petCount: cat.petCount + 1 };
-        } else {
-          // No change for non-matching cats
-          return cat;
-        }
-      })
-    );
+    // console.log(`we pet ${id} cat`);
+    // update the cat
+    petCatApi(id)
+      .then((apiCat) => {
+        setCatData(catData => catData.map(cat => {
+          if (cat.id === id) {
+            // update pet count
+            return apiCat;
+          } else {
+            // no change to this cat
+            return cat;
+          }
+        }));
+      });
   };
 
-  // Function to handle unregistering (removing) a cat
   const handleUnregisterCat = (id) => {
-    setCatData((catData) => catData.filter((cat) => cat.id !== id)); // Remove the cat with the matching id
+    unregisterCatApi(id)
+      .then(() => {
+        setCatData(catData => catData.filter(cat => {
+          return cat.id !== id;
+        }));
+      });
   };
 
-  // Function to calculate the total number of pets across all cats
   const calculateTotalPetCount = (catData) => {
-    return catData.reduce((total, cat) => total + cat.petCount, 0); // Sum petCount for all cats
+    console.log('cd', catData);
+    return catData.reduce((total, cat) => {
+      return total + cat.petCount;
+    }, 0);
   };
+
   const totalPets = calculateTotalPetCount(catData);
+
+  const handleSubmit = (catData) => {
+    axios.post(`${kbaseURL}/cats`, catData)
+      .then((result) => {
+        setCatData((prevCats) => [convertFromApi(result.data), ...prevCats]);
+      })
+      .catch((error) => console.log(error));
+  };
 
   return (
     <>
       <main>
         <h1> The Cat Corral </h1>
         <h2>Total Number of Pets Across All Cats: {totalPets}</h2>
+        <NewCatForm handleSubmit={handleSubmit}/>
         <CatList
           catData={catData}
           onPetCat={handlePetCat}
@@ -80,7 +118,9 @@ function App() {
         />
       </main>
     </>
+
   );
 }
 
 export default App;
+
