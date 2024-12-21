@@ -1,10 +1,13 @@
 // import { i } from 'vitest/dist/reporters-1evA5lom.js';
 import Cat from './Cat';
 import PropTypes from 'prop-types';
-
+import React from 'react';
 
 const CatList = ({ catData, onPetCat, onUnregisterCat }) => {
   const catComponents = catData.map((cat) => {
+    if (!cat) {
+      return null; // Skip undefined elements
+    }
     return (
       <Cat
         id={cat.id}
@@ -12,7 +15,7 @@ const CatList = ({ catData, onPetCat, onUnregisterCat }) => {
         personality={cat.personality}
         color={cat.color}
         caretaker={cat.caretaker}
-        petCount={cat.petCount}
+        petCount={cat.petCount || 0}
         onPetCat={onPetCat}
         onUnregisterCat={onUnregisterCat}
         key={cat.id}

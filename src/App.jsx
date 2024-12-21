@@ -11,10 +11,10 @@ const convertFromApi = (apiCat) => {
   const newCat = {
     ...apiCat,
     caretaker: apiCat.caretaker? apiCat.caretaker : 'Unknown',
-    petCount: apiCat.petCount
+    petCount: apiCat.petCount !== undefined ? apiCat.petCount : 0  // Ensure petCount is not undefined
   };
 
-  delete newCat.petCount;
+  // delete newCat.petCount;
   return newCat;
 };
 
@@ -62,22 +62,34 @@ function App() {
   }, []);
 
 
+  // const handlePetCat = (id) => {
+  //   // console.log(`we pet ${id} cat`);
+  //   // update the cat
+  //   petCatApi(id)
+  //     .then((apiCat) => {
+  //       setCatData(catData => catData.map(cat => {
+  //         if (cat.id === id) {
+  //           // update pet count
+  //           return apiCat;
+  //         } else {
+  //           // no change to this cat
+  //           return cat;
+  //         }
+  //       }));
+  //     });
+  // };
+
   const handlePetCat = (id) => {
-    // console.log(`we pet ${id} cat`);
-    // update the cat
-    petCatApi(id)
-      .then((apiCat) => {
-        setCatData(catData => catData.map(cat => {
-          if (cat.id === id) {
-            // update pet count
-            return apiCat;
-          } else {
-            // no change to this cat
-            return cat;
-          }
-        }));
+    setCatData((prevCatData) => {
+      return prevCatData.map((cat) => {
+        if (cat && cat.id === id) {
+          return { ...cat, petCount: (cat.petCount || 0) + 1 };
+        }
+        return cat;
       });
+    });
   };
+
 
   const handleUnregisterCat = (id) => {
     unregisterCatApi(id)
@@ -88,10 +100,18 @@ function App() {
       });
   };
 
+  // const calculateTotalPetCount = (catData) => {
+  //   return catData.reduce((total, cat) => {
+  //     return total + cat.petCount;
+  //   }, 0);
+  // };
+
   const calculateTotalPetCount = (catData) => {
-    console.log('cd', catData);
     return catData.reduce((total, cat) => {
-      return total + cat.petCount;
+      if (cat && cat.petCount) {
+        return total + cat.petCount;
+      }
+      return total;
     }, 0);
   };
 
